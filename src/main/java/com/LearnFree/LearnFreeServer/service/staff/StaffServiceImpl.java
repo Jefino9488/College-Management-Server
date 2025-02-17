@@ -6,9 +6,8 @@ import com.LearnFree.LearnFreeServer.entity.Department;
 import com.LearnFree.LearnFreeServer.entity.RoleEnum;
 import com.LearnFree.LearnFreeServer.entity.UserAccount;
 import com.LearnFree.LearnFreeServer.entity.UserAuthentication;
-import com.LearnFree.LearnFreeServer.repository.DepartmentRepository;
-import com.LearnFree.LearnFreeServer.repository.UserAccountRepository;
-import com.LearnFree.LearnFreeServer.repository.UserAuthenticationRepository;
+import com.LearnFree.LearnFreeServer.repository.*;
+import com.LearnFree.LearnFreeServer.service.grade.GradeService;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -31,10 +30,12 @@ public class StaffServiceImpl implements StaffService {
     private final UserAuthenticationRepository userAuthenticationRepository;
     private final PasswordEncoder passwordEncoder;
     private final DepartmentRepository departmentRepository;
+    private final GradeRepository gradeRepository;
+    private final SubjectRepository subjectRepository;
+    private final GradeService gradeService;
 
     @Override
-    public ResponseDTO addStudents(MultipartFile file, String department, Integer
-            academicYear) {
+    public ResponseDTO addStudents(MultipartFile file, String department, Integer academicYear) {
         if (!isValidExcelFile(file)) {
             return ResponseDTO.builder()
                     .status(false)
@@ -85,7 +86,7 @@ public class StaffServiceImpl implements StaffService {
                     continue;
                 }
 
-                Department departmentEntity = (Department) departmentRepository.findByCode(department)
+                Department departmentEntity = departmentRepository.findByCode(department)
                         .orElseThrow(() -> new IllegalArgumentException("Department not found"));
                 userAccount.setDepartment(departmentEntity);
                 userAccount.setAcademicYear(academicYear);
@@ -133,7 +134,7 @@ public class StaffServiceImpl implements StaffService {
         List<UserAccount> students = userAccountRepository.findStudentsByDepartmentAndYear(department, academicYear);
         List<StudentDTO> studentDTOs = new ArrayList<>();
         for (UserAccount student : students) {
-            StudentDTO studentDTO = StudentDTO.builder()
+            studentDTOs.add(StudentDTO.builder()
                     .id(student.getId())
                     .firstName(student.getFirstName())
                     .lastName(student.getLastName())
@@ -143,9 +144,69 @@ public class StaffServiceImpl implements StaffService {
                     .registrationNumber(student.getRegistrationNumber())
                     .academicYear(String.valueOf(student.getAcademicYear()))
                     .semester(String.valueOf(student.getSemester()))
-                    .build();
-            studentDTOs.add(studentDTO);
+                    .build());
         }
         return studentDTOs;
+    }
+
+    @Override
+    public ResponseDTO addGrades(MultipartFile file, int semester, String department, int academicYear) {
+        if (!isValidExcelFile(file)) {
+            return ResponseDTO.builder()
+                    .status(false)
+                    .message("Invalid Excel file format")
+                    .build();
+        }
+
+        try (XSSFWorkbook workbook = new XSSFWorkbook(file.getInputStream())) {
+            XSSFSheet sheet = workbook.getSheetAt(0);
+            if (sheet == null) {
+                return ResponseDTO.builder()
+                        .status(false)
+                        .message("Sheet not found")
+                        .build();
+            }
+
+            Iterator<Row> rowIterator = sheet.iterator();
+            int rowIndex = 0;
+            while (rowIterator.hasNext()) {
+                Row row = rowIterator.next();
+                if (rowIndex++ == 0) continue;
+
+                String registrationNumber = null;
+                String subjectCode = null;
+                String grade = null;
+
+                Iterator<Cell> cellIterator = row.cellIterator();
+                int cellIndex = 0;
+                while (cellIterator.hasNext()) {
+                    Cell cell = cellIterator.next();
+                    switch (cellIndex) {
+                        case 0 -> registrationNumber = getCellValueAsString(cell);
+                        case 1 -> subjectCode = getCellValueAsString(cell);
+                        case 2 -> grade = getCellValueAsString(cell);
+                    }
+                    cellIndex++;
+                }
+
+                if (registrationNumber == null || subjectCode == null || grade == null) {
+                    continue;
+                }
+
+                gradeService.addGrade(registrationNumber, subjectCode, grade, semester);
+            }
+
+            return ResponseDTO.builder()
+                    .status(true)
+                    .message("Grades added successfully")
+                    .build();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return ResponseDTO.builder()
+                    .status(false)
+                    .message("Error processing Excel file")
+                    .build();
+        }
     }
 }

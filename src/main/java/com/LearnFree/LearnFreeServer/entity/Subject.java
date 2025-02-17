@@ -20,6 +20,7 @@ public class Subject {
     private String name;
     private int semester;
     private int year;
+    private int credits;
 
     @ManyToOne
     @JoinColumn(name = "department_id")

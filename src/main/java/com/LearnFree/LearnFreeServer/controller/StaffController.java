@@ -36,4 +36,13 @@ public class StaffController {
         List<StudentDTO> students = staffService.getStudentsByDepartmentAndYear(department, academicYear);
         return ResponseEntity.ok(students != null ? students : Collections.emptyList());
     }
+
+    @PostMapping("/staff/add-grades")
+    public ResponseEntity<?> addGrades(
+            @RequestParam("grades_data") MultipartFile grades_data,
+            @RequestParam("semester") int semester,
+            @RequestParam("department") String department,
+            @RequestParam("academicYear") int academicYear) {
+        return ResponseEntity.ok(staffService.addGrades(grades_data, semester, department, academicYear));
+    }
 }

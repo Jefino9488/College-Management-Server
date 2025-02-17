@@ -14,6 +14,6 @@ public interface UserAccountRepository extends JpaRepository<UserAccount, Long> 
 
     @Query("SELECT ua FROM UserAccount ua WHERE ua.department.code = :departmentCode AND ua.academicYear = :academicYear AND EXISTS (SELECT auth FROM UserAuthentication auth WHERE auth.userId = ua.id AND auth.role = 'STUDENT')")
     List<UserAccount> findStudentsByDepartmentAndYear(String departmentCode, Integer academicYear);
-
+    Optional<UserAccount> findByRegistrationNumber(String registrationNumber); // New method
 //    Object countByRole(RoleEnum roleEnum);
 }

@@ -11,4 +11,6 @@ import java.util.List;
 public interface StaffService {
     ResponseDTO addStudents(MultipartFile file, String department, Integer academicYear);
     List<StudentDTO> getStudentsByDepartmentAndYear(String department, Integer academicYear);
+
+    ResponseDTO addGrades(MultipartFile file, int semester, String department, int academicYear);
 }

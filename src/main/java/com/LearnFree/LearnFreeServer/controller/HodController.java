@@ -42,6 +42,7 @@ public class HodController {
                 .name(dto.getName())
                 .semester(dto.getSemester())
                 .year(dto.getYear())
+                .credits(dto.getCredits())
                 .department(department)
                 .build();
 
