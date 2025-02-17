@@ -1,6 +1,7 @@
 package com.LearnFree.LearnFreeServer.service.staff;
 
 import com.LearnFree.LearnFreeServer.dto.ResponseDTO;
+import com.LearnFree.LearnFreeServer.dto.StudentDTO;
 import com.LearnFree.LearnFreeServer.entity.Department;
 import com.LearnFree.LearnFreeServer.entity.RoleEnum;
 import com.LearnFree.LearnFreeServer.entity.UserAccount;
@@ -18,7 +19,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -123,5 +126,26 @@ public class StaffServiceImpl implements StaffService {
     private boolean isValidExcelFile(MultipartFile file) {
         String filename = file.getOriginalFilename();
         return filename != null && filename.toLowerCase().endsWith(".xlsx");
+    }
+
+    @Override
+    public List<StudentDTO> getStudentsByDepartmentAndYear(String department, Integer academicYear) {
+        List<UserAccount> students = userAccountRepository.findStudentsByDepartmentAndYear(department, academicYear);
+        List<StudentDTO> studentDTOs = new ArrayList<>();
+        for (UserAccount student : students) {
+            StudentDTO studentDTO = StudentDTO.builder()
+                    .id(student.getId())
+                    .firstName(student.getFirstName())
+                    .lastName(student.getLastName())
+                    .gender(student.getGender())
+                    .dateOfBirth(student.getDateOfBirth())
+                    .mobileNumber(student.getMobileNumber())
+                    .registrationNumber(student.getRegistrationNumber())
+                    .academicYear(String.valueOf(student.getAcademicYear()))
+                    .semester(String.valueOf(student.getSemester()))
+                    .build();
+            studentDTOs.add(studentDTO);
+        }
+        return studentDTOs;
     }
 }

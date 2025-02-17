@@ -2,6 +2,7 @@ package com.LearnFree.LearnFreeServer.repository;
 
 import com.LearnFree.LearnFreeServer.entity.UserAccount;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -11,5 +12,8 @@ import java.util.Optional;
 public interface UserAccountRepository extends JpaRepository<UserAccount, Long> {
     Optional<UserAccount> findById(Long id);
 
-    List<UserAccount> findByDepartment_CodeAndAcademicYear(String departmentCode, Integer academicYear);
+    @Query("SELECT ua FROM UserAccount ua WHERE ua.department.code = :departmentCode AND ua.academicYear = :academicYear AND EXISTS (SELECT auth FROM UserAuthentication auth WHERE auth.userId = ua.id AND auth.role = 'STUDENT')")
+    List<UserAccount> findStudentsByDepartmentAndYear(String departmentCode, Integer academicYear);
+
+//    Object countByRole(RoleEnum roleEnum);
 }
