@@ -4,10 +4,8 @@ import com.LearnFree.LearnFreeServer.dto.RegistrationRequestDTO;
 import com.LearnFree.LearnFreeServer.dto.ResponseDTO;
 import com.LearnFree.LearnFreeServer.emailsender.EmailService;
 import com.LearnFree.LearnFreeServer.emailsender.EmailTemplateName;
-import com.LearnFree.LearnFreeServer.entity.RoleEnum;
-import com.LearnFree.LearnFreeServer.entity.UserAccount;
-import com.LearnFree.LearnFreeServer.entity.UserAuthentication;
-import com.LearnFree.LearnFreeServer.entity.VerificationData;
+import com.LearnFree.LearnFreeServer.entity.*;
+import com.LearnFree.LearnFreeServer.repository.DepartmentRepository;
 import com.LearnFree.LearnFreeServer.repository.UserAccountRepository;
 import com.LearnFree.LearnFreeServer.repository.UserAuthenticationRepository;
 import com.LearnFree.LearnFreeServer.repository.VerificationDataRepository;
@@ -26,6 +24,7 @@ public class RegistrationServiceImpl implements RegistrationService{
 
     private final UserAuthenticationRepository userAuthenticationRepository;
     private final UserAccountRepository userAccountRepository;
+    private final DepartmentRepository departmentRepository;
     private final VerificationDataRepository verificationDataRepository;
     private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
@@ -65,18 +64,25 @@ public class RegistrationServiceImpl implements RegistrationService{
 
         ResponseDTO presentResponse = verifyActivationCode(registrationRequestDTO);
 
-        if(presentResponse.isStatus()){
+        if (presentResponse.isStatus()) {
 
-            UserAccount userData=UserAccount.builder()
+            UserAccount userData = UserAccount.builder()
                     .firstName(registrationRequestDTO.getFirstName())
                     .lastName(registrationRequestDTO.getLastName())
                     .gender(registrationRequestDTO.getGender())
                     .mobileNumber(registrationRequestDTO.getMobileNumber())
-                    .department(registrationRequestDTO.getDepartment())
                     .build();
             userAccountRepository.save(userData);
+
+            // Skip department validation for PRINCIPAL
+            if (!registrationRequestDTO.getRole().equalsIgnoreCase("PRINCIPAL")) {
+                Department department = departmentRepository.findByCode(registrationRequestDTO.getDepartment())
+                        .orElseThrow(() -> new IllegalArgumentException("Invalid department code"));
+                userData.setDepartment(department);
+            }
+
             RoleEnum responseRoleEnum = RoleEnum.valueOf(registrationRequestDTO.getRole());
-            UserAuthentication userAuthentication=UserAuthentication.builder()
+            UserAuthentication userAuthentication = UserAuthentication.builder()
                     .userId(userData.getId())
                     .email(registrationRequestDTO.getEmail())
                     .password(passwordEncoder.encode(registrationRequestDTO.getPassword()))

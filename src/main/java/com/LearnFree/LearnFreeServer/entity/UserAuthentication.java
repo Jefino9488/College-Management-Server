@@ -30,7 +30,7 @@ public class UserAuthentication implements UserDetails, Principal {
     @Column(name = "user_id")
     private Long userId;
 
-    @Column(name = "user_email")
+    @Column(name = "user_email" ,unique = true)
     private String email;
 
     @Column(name = "euser_password")
@@ -75,4 +75,7 @@ public class UserAuthentication implements UserDetails, Principal {
         return true;
     }
 
+    public UserAuthentication orElseThrow(Object principalNotFound) {
+        return null;
+    }
 }

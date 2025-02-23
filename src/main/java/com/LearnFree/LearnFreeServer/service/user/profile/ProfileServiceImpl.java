@@ -4,8 +4,10 @@ import com.LearnFree.LearnFreeServer.dto.PrincipalProfileUpdateDTO;
 import com.LearnFree.LearnFreeServer.dto.ResponseDTO;
 import com.LearnFree.LearnFreeServer.dto.StudentProfileUpdateDTO;
 import com.LearnFree.LearnFreeServer.dto.TeacherProfileUpdateDTO;
+import com.LearnFree.LearnFreeServer.entity.Department;
 import com.LearnFree.LearnFreeServer.entity.RoleEnum;
 import com.LearnFree.LearnFreeServer.entity.UserAccount;
+import com.LearnFree.LearnFreeServer.repository.DepartmentRepository;
 import com.LearnFree.LearnFreeServer.repository.UserAccountRepository;
 import com.LearnFree.LearnFreeServer.repository.UserAuthenticationRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,7 @@ public class ProfileServiceImpl implements ProfileService {
 
     private final UserAccountRepository userAccountRepository;
     private final UserAuthenticationRepository userAuthenticationRepository;
+    private final DepartmentRepository departmentRepository;
 
     @Override
     public ResponseDTO updateStudentProfile(String userEmail, StudentProfileUpdateDTO dto) {
@@ -32,12 +35,13 @@ public class ProfileServiceImpl implements ProfileService {
         if (userAccount == null) {
             return ResponseDTO.builder().status(false).message("User account not found.").build();
         }
+
+        // Update fields
         if (dto.getFirstName() != null) userAccount.setFirstName(dto.getFirstName());
         if (dto.getLastName() != null) userAccount.setLastName(dto.getLastName());
         if (dto.getGender() != null) userAccount.setGender(dto.getGender());
         if (dto.getDateOfBirth() != null) userAccount.setDateOfBirth(dto.getDateOfBirth());
         if (dto.getMobileNumber() != null) userAccount.setMobileNumber(dto.getMobileNumber());
-        if (dto.getDepartment() != null) userAccount.setDepartment(dto.getDepartment());
         if (dto.getPersonalEmail() != null) userAccount.setPersonalEmail(dto.getPersonalEmail());
         if (dto.getGithub() != null) userAccount.setGithub(dto.getGithub());
         if (dto.getLinkedIn() != null) userAccount.setLinkedIn(dto.getLinkedIn());
@@ -47,10 +51,17 @@ public class ProfileServiceImpl implements ProfileService {
         if (dto.getSemester() != null) userAccount.setSemester(dto.getSemester());
         if (dto.getGpa() != null) userAccount.setGpa(dto.getGpa());
         if (dto.getAdvisor() != null) userAccount.setAdvisor(dto.getAdvisor());
+        if (dto.getDepartmentId() != null) {
+            Department department = departmentRepository.findById(dto.getDepartmentId())
+                    .orElseThrow(() -> new IllegalArgumentException("Invalid department ID"));
+            userAccount.setDepartment(department);
+        }
         if (dto.getEnrollmentDate() != null && !dto.getEnrollmentDate().trim().isEmpty())
             userAccount.setEnrollmentDate(LocalDate.parse(dto.getEnrollmentDate()));
         if (dto.getExpectedGraduation() != null && !dto.getExpectedGraduation().trim().isEmpty())
             userAccount.setExpectedGraduation(LocalDate.parse(dto.getExpectedGraduation()));
+
+        // Handle collections
         if (dto.getAchievements() != null) {
             userAccount.getAchievements().clear();
             userAccount.getAchievements().addAll(dto.getAchievements());
@@ -67,6 +78,7 @@ public class ProfileServiceImpl implements ProfileService {
             userAccount.getCertificates().clear();
             userAccount.getCertificates().addAll(dto.getCertificates());
         }
+
         userAccountRepository.save(userAccount);
         return ResponseDTO.builder().status(true).message("Profile updated successfully.").build();
     }
@@ -93,7 +105,7 @@ public class ProfileServiceImpl implements ProfileService {
         userAccount.setGender(dto.getGender());
         userAccount.setDateOfBirth(dto.getDateOfBirth());
         userAccount.setMobileNumber(dto.getMobileNumber());
-        userAccount.setDepartment(dto.getDepartment());
+
         userAccount.setPersonalEmail(dto.getPersonalEmail());
         userAccountRepository.save(userAccount);
         return ResponseDTO.builder()
@@ -123,7 +135,6 @@ public class ProfileServiceImpl implements ProfileService {
         userAccount.setGender(dto.getGender());
         userAccount.setDateOfBirth(dto.getDateOfBirth());
         userAccount.setMobileNumber(dto.getMobileNumber());
-        userAccount.setDepartment(dto.getDepartment());
         userAccount.setPersonalEmail(dto.getPersonalEmail());
         userAccount.setQualifications(dto.getQualifications());
         userAccountRepository.save(userAccount);
@@ -147,7 +158,6 @@ public class ProfileServiceImpl implements ProfileService {
         profile.put("gender", userAccount.getGender());
         profile.put("dateOfBirth", userAccount.getDateOfBirth());
         profile.put("mobileNumber", userAccount.getMobileNumber());
-        profile.put("department", userAccount.getDepartment());
         profile.put("personalEmail", userAccount.getPersonalEmail());
         profile.put("registrationNumber", userAccount.getRegistrationNumber());
         profile.put("github", userAccount.getGithub());

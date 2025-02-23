@@ -54,16 +54,16 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(req ->
                         req.requestMatchers(
-                                "/learn-free/**"
-                        )
+                                        "/learn-free/**",
+                                        "/api/college/register"
+                                )
                                 .permitAll()
                                 .anyRequest()
-                                    .authenticated()
+                                .authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtFilter(), UsernamePasswordAuthenticationFilter.class);
         return httpSecurity.build();
     }
-
 }

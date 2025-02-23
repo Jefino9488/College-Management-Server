@@ -189,3 +189,92 @@ Authorization: Bearer <logedIn_student_jwt_token_here>
 2. **File Upload**: The `/learn-free/staff/add-students` endpoint requires a valid Excel file with the correct format.
 3. **Roles**: Some endpoints are restricted to specific roles (e.g., only staff can add students).
 
+
+# DATABASE SCHEMA
+## College Table
+**Project Dir:** /db/college
+
+| id | name         | address                | contact         |
+|----|--------------|------------------------|-----------------|
+| 1  | ABC College  | 123 Main St, Cityville | 9876543210      |
+
+## User Table
+**Project Dir:** /db/user
+
+| id | email                | password     | role      |
+|----|----------------------|--------------|-----------|
+| 1  | principal@abc.com    | hashed_pass  | Principal |
+| 2  | hod@abc.com          | hashed_pass  | HOD       |
+| 3  | staff@abc.com        | hashed_pass  | Staff     |
+| 4  | student@abc.com      | hashed_pass  | Student   |
+
+## Department Table
+**Project Dir:** /db/department
+
+| id | name | description         | college_id |
+|----|------|---------------------|------------|
+| 1  | CSE  | Computer Science    | 1          |
+
+## HOD Table
+**Project Dir:** /db/hod
+
+| id | user_id | department_id |
+|----|---------|---------------|
+| 1  | 2       | 1             |
+
+## Staff Table
+**Project Dir:** /db/staff
+
+| id | user_id | department_id |
+|----|---------|---------------|
+| 1  | 3       | 1             |
+
+## Student Table
+**Project Dir:** /db/student
+
+| id | user_id | registration_number | department_id | batch_id |
+|----|---------|---------------------|---------------|----------|
+| 1  | 4       | REG2021ABC          | 1             | 1        |
+
+## Batch Table
+**Project Dir:** /db/batch
+
+| id | name       | start_year | end_year |
+|----|------------|------------|----------|
+| 1  | 2021 Batch | 2021       | 2025     |
+
+## Subject Table
+**Project Dir:** /db/subject
+
+| id | name  | department_id |
+|----|-------|---------------|
+| 1  | CS101 | 1             |
+
+## Exam Table
+**Project Dir:** /db/exam
+
+| id | name      | department_id | subject_id | date       | time  | session | type    | semester |
+|----|-----------|---------------|------------|------------|-------|---------|---------|----------|
+| 1  | Mid Term  | 1             | 1          | 2021-10-10 | 09:00 | FN      | Online  | 1st      |
+
+## Grade Table
+**Project Dir:** /db/grade
+
+| id | student_id | subject_id | grade | semester |
+|----|------------|------------|-------|----------|
+| 1  | 1          | 1          | A     | 1st      |
+
+## Attendance Table
+**Project Dir:** /db/attendance
+
+| id | student_id | date       | present | department_id | semester |
+|----|------------|------------|---------|---------------|----------|
+| 1  | 1          | 2021-09-01 | true    | 1             | 1st      |
+
+## Fees Table
+**Project Dir:** /db/fees
+
+| id | student_id | amount | payment_date | status |
+|----|------------|--------|--------------|--------|
+| 1  | 1          | 1000   | 2021-08-15   | Paid   |
+

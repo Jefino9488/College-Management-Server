@@ -26,9 +26,6 @@ public class Exam {
     private String department;
 
     @Column(nullable = false)
-    private String subject;
-
-    @Column(nullable = false)
     private LocalDate date;
 
     @Column(nullable = false)
@@ -42,4 +39,8 @@ public class Exam {
 
     @Column(nullable = false)
     private String semester; // "1st", "2nd", etc.
+
+    @ManyToOne
+    @JoinColumn(name = "subject_id")
+    private Subject subject;
 }

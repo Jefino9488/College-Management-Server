@@ -1,7 +1,7 @@
 package com.LearnFree.LearnFreeServer.controller;
 
 import com.LearnFree.LearnFreeServer.dto.ResponseDTO;
-import com.LearnFree.LearnFreeServer.entity.UserAccount;
+import com.LearnFree.LearnFreeServer.dto.StudentDTO;
 import com.LearnFree.LearnFreeServer.repository.UserAccountRepository;
 import com.LearnFree.LearnFreeServer.service.staff.StaffService;
 import lombok.RequiredArgsConstructor;
@@ -30,14 +30,19 @@ public class StaffController {
     }
 
     @GetMapping("/staff/students")
-    public ResponseEntity<List<UserAccount>> getStudentsByDepartmentAndYear(
+    public ResponseEntity<List<StudentDTO>> getStudentsByDepartmentAndYear(
             @RequestParam String department,
-            @RequestParam Integer academicYear
-    ) {
-        List<UserAccount> students = userAccountRepository
-                .findByDepartmentAndAcademicYear(department, academicYear);
+            @RequestParam Integer academicYear) {
+        List<StudentDTO> students = staffService.getStudentsByDepartmentAndYear(department, academicYear);
         return ResponseEntity.ok(students != null ? students : Collections.emptyList());
     }
 
-
+    @PostMapping("/staff/add-grades")
+    public ResponseEntity<?> addGrades(
+            @RequestParam("grades_data") MultipartFile grades_data,
+            @RequestParam("semester") int semester,
+            @RequestParam("department") String department,
+            @RequestParam("academicYear") int academicYear) {
+        return ResponseEntity.ok(staffService.addGrades(grades_data, semester, department, academicYear));
+    }
 }

@@ -39,9 +39,6 @@ public class UserAccount {
     @Column(name="mobile_number")
     private String mobileNumber;
 
-    @Column(name="department")
-    private String department;
-
     @Column(name="personal_email")
     private String personalEmail;
 
@@ -82,22 +79,34 @@ public class UserAccount {
     private LocalDate expectedGraduation;
 
     @ElementCollection
+    @Builder.Default
     @CollectionTable(name = "user_achievements", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "achievement")
     private List<String> achievements = new ArrayList<>();
 
     @ElementCollection
+    @Builder.Default
     @CollectionTable(name = "user_activities", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "activity")
     private List<String> activities = new ArrayList<>();
 
     @ElementCollection
+    @Builder.Default
     @CollectionTable(name = "user_courses", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "course")
     private List<String> courses = new ArrayList<>();
 
     @ElementCollection
+    @Builder.Default
     @CollectionTable(name = "user_profile_certificates", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "certificate")
     private List<String> certificates = new ArrayList<>();
+
+    @ManyToOne
+    @JoinColumn(name = "batch_id")
+    private Batch batch;
+
+    @ManyToOne
+    @JoinColumn(name = "department_id")
+    private Department department;
 }

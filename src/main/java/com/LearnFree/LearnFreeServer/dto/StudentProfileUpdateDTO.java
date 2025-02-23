@@ -32,4 +32,5 @@ public class StudentProfileUpdateDTO extends ProfileUpdateDTO {
     private List<String> activities;
     private List<String> courses;
     private List<String> certificates;
+    private Long departmentId;
 }

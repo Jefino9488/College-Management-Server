@@ -43,9 +43,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .orElseThrow(() -> new UsernameNotFoundException("User Not Found"));
 
         var claims = new HashMap<String, Object>();
-        var user = (UserAuthentication)auth.getPrincipal();
-        claims.put("role",user.getRole());
-        String generatedJwtToken = jwtService.generateToken(claims,user);
+        var user = (UserAuthentication) auth.getPrincipal();
+        claims.put("role", user.getRole());
+        String generatedJwtToken = jwtService.generateToken(claims, user);
+
+        String departmentName = userData.getDepartment() != null ? userData.getDepartment().getName() : null;
 
         return AuthenticationResponseDTO.builder()
                 .userId(userAuthentication.getUserId())
@@ -54,7 +56,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .gender(userData.getGender())
                 .mobileNumber(userData.getMobileNumber())
                 .email(userAuthentication.getEmail())
-                .department(userData.getDepartment())
+                .department(departmentName)
                 .role(userAuthentication.getRole().toString())
                 .jwtToken(generatedJwtToken)
                 .build();
