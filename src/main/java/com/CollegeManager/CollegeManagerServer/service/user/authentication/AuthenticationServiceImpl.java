@@ -48,6 +48,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         String generatedJwtToken = jwtService.generateToken(claims, user);
 
         String departmentName = userData.getDepartment() != null ? userData.getDepartment().getName() : null;
+        Long collegeId = userData.getCollege() != null ? userData.getCollege().getId() : null;
+        String collegeName = userData.getCollege() != null ? userData.getCollege().getName() : null;
 
         return AuthenticationResponseDTO.builder()
                 .userId(userAuthentication.getUserId())
@@ -59,6 +61,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .department(departmentName)
                 .role(userAuthentication.getRole().toString())
                 .jwtToken(generatedJwtToken)
+                .collegeId(collegeId)
+                .collegeName(collegeName)
                 .build();
     }
 }

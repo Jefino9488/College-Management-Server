@@ -5,10 +5,7 @@ import com.CollegeManager.CollegeManagerServer.dto.ResponseDTO;
 import com.CollegeManager.CollegeManagerServer.emailsender.EmailService;
 import com.CollegeManager.CollegeManagerServer.emailsender.EmailTemplateName;
 import com.CollegeManager.CollegeManagerServer.entity.*;
-import com.CollegeManager.CollegeManagerServer.repository.DepartmentRepository;
-import com.CollegeManager.CollegeManagerServer.repository.UserAccountRepository;
-import com.CollegeManager.CollegeManagerServer.repository.UserAuthenticationRepository;
-import com.CollegeManager.CollegeManagerServer.repository.VerificationDataRepository;
+import com.CollegeManager.CollegeManagerServer.repository.*;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -28,6 +25,7 @@ public class RegistrationServiceImpl implements RegistrationService{
     private final VerificationDataRepository verificationDataRepository;
     private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
+    private final CollegeRepository collegeRepository;
 
     @Override
     public ResponseDTO registrationEmailValidation(String email) throws MessagingException {
@@ -58,28 +56,30 @@ public class RegistrationServiceImpl implements RegistrationService{
     }
 
     @Override
-    public ResponseDTO userRegistration(
-            RegistrationRequestDTO registrationRequestDTO
-    ) throws MessagingException {
-
+    public ResponseDTO userRegistration(RegistrationRequestDTO registrationRequestDTO) throws MessagingException {
         ResponseDTO presentResponse = verifyActivationCode(registrationRequestDTO);
 
         if (presentResponse.isStatus()) {
-
             UserAccount userData = UserAccount.builder()
                     .firstName(registrationRequestDTO.getFirstName())
                     .lastName(registrationRequestDTO.getLastName())
                     .gender(registrationRequestDTO.getGender())
                     .mobileNumber(registrationRequestDTO.getMobileNumber())
                     .build();
-            userAccountRepository.save(userData);
 
-            // Skip department validation for PRINCIPAL
+            // Associate college
+            College college = collegeRepository.findById(registrationRequestDTO.getCollegeId())
+                    .orElseThrow(() -> new IllegalArgumentException("Invalid college ID"));
+            userData.setCollege(college);
+
+            // Department validation
             if (!registrationRequestDTO.getRole().equalsIgnoreCase("PRINCIPAL")) {
                 Department department = departmentRepository.findByCode(registrationRequestDTO.getDepartment())
                         .orElseThrow(() -> new IllegalArgumentException("Invalid department code"));
                 userData.setDepartment(department);
             }
+
+            userAccountRepository.save(userData);
 
             RoleEnum responseRoleEnum = RoleEnum.valueOf(registrationRequestDTO.getRole());
             UserAuthentication userAuthentication = UserAuthentication.builder()
@@ -89,7 +89,6 @@ public class RegistrationServiceImpl implements RegistrationService{
                     .role(responseRoleEnum)
                     .build();
             userAuthenticationRepository.save(userAuthentication);
-
         }
 
         return presentResponse;

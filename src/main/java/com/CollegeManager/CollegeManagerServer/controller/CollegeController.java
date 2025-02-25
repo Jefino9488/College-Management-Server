@@ -9,34 +9,33 @@ import com.CollegeManager.CollegeManagerServer.service.college.CollegeService;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
-@RequestMapping("/api/college")
+@RequestMapping("/college-manager/college")
 @RequiredArgsConstructor
 public class CollegeController {
     private final CollegeService collegeService;
     private final UserAuthenticationRepository authRepository;
 
     @PostMapping("/register")
+    @PreAuthorize("hasRole('PRINCIPAL')")
     public ResponseEntity<ResponseDTO> registerCollege(
             @RequestBody CollegeRegistrationDTO dto,
-            @RequestParam String principalEmail) throws MessagingException {
-
-        UserAuthentication principalAuth = authRepository.findByEmail(principalEmail);
-        if (principalAuth == null) {
-            return ResponseEntity.badRequest().body(ResponseDTO.builder()
-                    .status(false)
-                    .message("Principal email not registered")
-                    .build());
-        }
-
-        College college = collegeService.createCollege(dto);
-        collegeService.assignPrincipalToCollege(college, principalEmail);
-
+            @AuthenticationPrincipal UserAuthentication principal) throws MessagingException {
+        College college = collegeService.createCollege(dto, principal.getEmail());
         return ResponseEntity.ok(ResponseDTO.builder()
                 .status(true)
                 .message("College registered with code: " + college.getCode())
                 .build());
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<List<College>> getAllColleges() {
+        return ResponseEntity.ok(collegeService.getAllColleges());
     }
 }

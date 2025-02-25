@@ -70,7 +70,9 @@ public class JwtFilter extends OncePerRequestFilter {
 
                 || request.getServletPath().contains("/college-manager/registration/verify")
 
-                || request.getServletPath().contains("/college-manager/authentication");
+                || request.getServletPath().contains("/college-manager/authentication")
+
+                || request.getServletPath().contains("/college-manager/college/all");
 
     }
 }

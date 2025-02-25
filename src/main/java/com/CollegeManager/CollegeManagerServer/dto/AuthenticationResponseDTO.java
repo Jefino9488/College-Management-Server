@@ -34,4 +34,8 @@ public class AuthenticationResponseDTO {
 
     private String jwtToken;
 
+    private Long collegeId;
+
+    private String collegeName;
+
 }

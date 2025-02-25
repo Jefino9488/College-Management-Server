@@ -13,6 +13,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
@@ -23,7 +24,7 @@ public class CollegeService {
     private final UserAuthenticationRepository authRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public College createCollege(CollegeRegistrationDTO dto) {
+    public College createCollege(CollegeRegistrationDTO dto, String principalEmail) {
         String collegeCode = generateCollegeCode(dto.getName());
 
         College college = College.builder()
@@ -34,21 +35,27 @@ public class CollegeService {
                 .phoneNumber(dto.getPhoneNumber())
                 .build();
 
-        return collegeRepository.save(college);
+        College savedCollege = collegeRepository.save(college);
+        assignPrincipalToCollege(savedCollege, principalEmail);
+        return savedCollege;
     }
 
     public void assignPrincipalToCollege(College college, String principalEmail) {
         UserAuthentication principalAuth = authRepository.findByEmail(principalEmail);
-
         UserAccount principal = userAccountRepository.findById(principalAuth.getUserId())
                 .orElseThrow(() -> new IllegalArgumentException("Principal account not found"));
 
         college.setPrincipal(principal);
+        principal.setCollege(college); // Link back to college
         collegeRepository.save(college);
+        userAccountRepository.save(principal);
 
-        // Update principal role
         principalAuth.setRole(RoleEnum.PRINCIPAL);
         authRepository.save(principalAuth);
+    }
+
+    public List<College> getAllColleges() {
+        return collegeRepository.findAll();
     }
 
     private String generateCollegeCode(String name) {

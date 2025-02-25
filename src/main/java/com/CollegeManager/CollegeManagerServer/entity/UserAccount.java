@@ -111,4 +111,9 @@ public class UserAccount {
     @JoinColumn(name = "department_id")
     @JsonBackReference
     private Department department;
+
+    @ManyToOne
+    @JoinColumn(name = "college_id")
+    @JsonBackReference
+    private College college;
 }

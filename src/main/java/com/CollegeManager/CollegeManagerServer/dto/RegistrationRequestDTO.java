@@ -34,4 +34,6 @@ public class RegistrationRequestDTO {
 
     private String academicYear;
 
+    private Long collegeId;
+
 }

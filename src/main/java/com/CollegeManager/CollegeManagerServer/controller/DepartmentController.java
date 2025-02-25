@@ -13,6 +13,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("college-manager/department")
@@ -49,14 +51,12 @@ public class DepartmentController {
         College college = collegeRepository.findById(departmentDTO.getCollegeId())
                 .orElseThrow(() -> new IllegalArgumentException("College not found"));
 
-        // Verify principal's authority over this college
         UserAccount principalAccount = userAccountRepository.findById(principal.getUserId())
                 .orElseThrow(() -> new IllegalArgumentException("Principal account not found"));
         if (!college.getPrincipal().getId().equals(principalAccount.getId())) {
-            return ResponseEntity.status(403).build(); // Forbidden
+            return ResponseEntity.status(403).build();
         }
 
-        // Check if department code already exists
         if (departmentRepository.findByCode(departmentDTO.getCode()).isPresent()) {
             throw new IllegalArgumentException("Department code already exists");
         }
@@ -87,7 +87,7 @@ public class DepartmentController {
         UserAccount principalAccount = userAccountRepository.findById(principal.getUserId())
                 .orElseThrow(() -> new IllegalArgumentException("Principal account not found"));
         if (!department.getCollege().getPrincipal().getId().equals(principalAccount.getId())) {
-            return ResponseEntity.status(403).build(); // Forbidden
+            return ResponseEntity.status(403).build();
         }
 
         UserAuthentication hodAuth = authRepository.findByUserId(hod.getId())
@@ -98,5 +98,25 @@ public class DepartmentController {
 
         department.setHod(hod);
         return ResponseEntity.ok(departmentRepository.save(department));
+    }
+
+    // New endpoint to fetch all HODs
+    @GetMapping("/hods")
+    @PreAuthorize("hasRole('PRINCIPAL')")
+    public ResponseEntity<List<UserAccount>> getHods(
+            @AuthenticationPrincipal UserAuthentication principal) {
+        UserAccount principalAccount = userAccountRepository.findById(principal.getUserId())
+                .orElseThrow(() -> new IllegalArgumentException("Principal account not found"));
+
+        List<UserAuthentication> hodAuths = authRepository.findAll().stream()
+                .filter(auth -> auth.getRole().equals(RoleEnum.HOD))
+                .toList();
+
+        List<UserAccount> hods = hodAuths.stream()
+                .map(auth -> userAccountRepository.findById(auth.getUserId()).orElse(null))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(hods);
     }
 }
