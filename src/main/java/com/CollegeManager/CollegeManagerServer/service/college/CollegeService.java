@@ -41,7 +41,9 @@ public class CollegeService {
     }
 
     public void assignPrincipalToCollege(College college, String principalEmail) {
-        UserAuthentication principalAuth = authRepository.findByEmail(principalEmail);
+        UserAuthentication principalAuth = authRepository.findByEmail(principalEmail)
+                .orElseThrow(() -> new EntityNotFoundException("Authentication record not found for email: " + principalEmail));
+
         UserAccount principal = userAccountRepository.findById(principalAuth.getUserId())
                 .orElseThrow(() -> new IllegalArgumentException("Principal account not found"));
 
