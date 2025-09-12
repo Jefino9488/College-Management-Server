@@ -43,6 +43,15 @@ public class DepartmentController {
         return ResponseEntity.ok(departments);
     }
 
+    @GetMapping("/by-college/{collegeId}")
+    public ResponseEntity<List<Department>> getPublicDepartmentsByCollege(@PathVariable Long collegeId) {
+        if (!collegeRepository.existsById(collegeId)) {
+            return ResponseEntity.notFound().build();
+        }
+        List<Department> departments = departmentRepository.findByCollegeId(collegeId);
+        return ResponseEntity.ok(departments);
+    }
+
     @PostMapping("/add")
     @PreAuthorize("hasRole('PRINCIPAL')")
     public ResponseEntity<Department> addDepartment(
