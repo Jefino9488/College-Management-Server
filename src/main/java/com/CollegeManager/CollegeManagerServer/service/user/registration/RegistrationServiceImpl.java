@@ -3,11 +3,14 @@ package com.CollegeManager.CollegeManagerServer.service.user.registration;
 import com.CollegeManager.CollegeManagerServer.dto.AuthenticationResponseDTO;
 import com.CollegeManager.CollegeManagerServer.dto.RegistrationRequestDTO;
 import com.CollegeManager.CollegeManagerServer.dto.ResponseDTO;
+import com.CollegeManager.CollegeManagerServer.dto.UserDTO;
 import com.CollegeManager.CollegeManagerServer.emailsender.EmailService;
 import com.CollegeManager.CollegeManagerServer.emailsender.EmailTemplateName;
 import com.CollegeManager.CollegeManagerServer.entity.*;
 import com.CollegeManager.CollegeManagerServer.repository.*;
+import com.CollegeManager.CollegeManagerServer.security.jwt.JwtService;
 import jakarta.mail.MessagingException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -83,7 +86,7 @@ public class RegistrationServiceImpl implements RegistrationService{
                 throw new IllegalArgumentException("College ID is required for this role.");
             }
             College college = collegeRepository.findById(registrationRequestDTO.getCollegeId())
-                    .orElseThrow(() -> new IllegalArgumentException("Invalid college ID"));
+                    .orElseThrow(() -> new IllegalArgumentException("Invalid college ID: " + registrationRequestDTO.getCollegeId()));
             userData.setCollege(college);
 
             if (registrationRequestDTO.getDepartment() == null || registrationRequestDTO.getDepartment().isEmpty()) {
