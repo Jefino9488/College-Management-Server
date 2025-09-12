@@ -116,20 +116,12 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Override
     public ResponseDTO updatePrincipalProfile(String userEmail, PrincipalProfileUpdateDTO dto) {
-        var userAuthentication = userAuthenticationRepository.findByEmail(userEmail);
-        if (userAuthentication == null) {
-            return ResponseDTO.builder()
-                    .status(false)
-                    .message("User not found")
-                    .build();
-        }
-        var userAccount = userAccountRepository.findById(userAuthentication.getUserId()).orElse(null);
-        if (userAccount == null) {
-            return ResponseDTO.builder()
-                    .status(false)
-                    .message("User account not found")
-                    .build();
-        }
+        UserAuthentication userAuthentication = userAuthenticationRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with email: " + userEmail));
+
+        UserAccount userAccount = userAccountRepository.findById(userAuthentication.getUserId())
+                .orElseThrow(() -> new EntityNotFoundException("User account not found for ID: " + userAuthentication.getUserId()));
+
         userAccount.setFirstName(dto.getFirstName());
         userAccount.setLastName(dto.getLastName());
         userAccount.setGender(dto.getGender());

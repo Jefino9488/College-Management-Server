@@ -8,8 +8,10 @@ import com.CollegeManager.CollegeManagerServer.entity.UserAuthentication;
 import com.CollegeManager.CollegeManagerServer.repository.CollegeRepository;
 import com.CollegeManager.CollegeManagerServer.repository.UserAccountRepository;
 import com.CollegeManager.CollegeManagerServer.repository.UserAuthenticationRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
@@ -22,9 +24,10 @@ public class CollegeService {
     private final CollegeRepository collegeRepository;
     private final UserAccountRepository userAccountRepository;
     private final UserAuthenticationRepository authRepository;
-    private final PasswordEncoder passwordEncoder;
+    public College createCollege(CollegeRegistrationDTO dto, String email) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String principalEmail = authentication.getName();
 
-    public College createCollege(CollegeRegistrationDTO dto, String principalEmail) {
         String collegeCode = generateCollegeCode(dto.getName());
 
         College college = College.builder()
