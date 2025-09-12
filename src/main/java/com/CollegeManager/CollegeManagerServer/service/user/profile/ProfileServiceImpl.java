@@ -4,9 +4,11 @@ import com.CollegeManager.CollegeManagerServer.dto.*;
 import com.CollegeManager.CollegeManagerServer.entity.Department;
 import com.CollegeManager.CollegeManagerServer.entity.RoleEnum;
 import com.CollegeManager.CollegeManagerServer.entity.UserAccount;
+import com.CollegeManager.CollegeManagerServer.entity.UserAuthentication;
 import com.CollegeManager.CollegeManagerServer.repository.DepartmentRepository;
 import com.CollegeManager.CollegeManagerServer.repository.UserAccountRepository;
 import com.CollegeManager.CollegeManagerServer.repository.UserAuthenticationRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
