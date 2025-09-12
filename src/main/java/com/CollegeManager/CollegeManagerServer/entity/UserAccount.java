@@ -42,6 +42,9 @@ public class UserAccount {
     @Column(name="personal_email")
     private String personalEmail;
 
+    @Enumerated(EnumType.STRING)
+    private RoleEnum role;
+    
     @Column(name = "registration_number")
     private String registrationNumber;
 
