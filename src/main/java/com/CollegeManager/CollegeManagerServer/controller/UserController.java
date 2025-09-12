@@ -35,6 +35,13 @@ public class UserController {
         return ResponseEntity.ok(registrationService.userRegistration(registrationRequestDTO));
     }
 
+    @GetMapping("/profile/status")
+    public ResponseEntity<UserProfileStatusDTO> getProfileStatus(
+            @AuthenticationPrincipal UserAuthentication user
+    ) {
+        return ResponseEntity.ok(profileService.getProfileStatus(user.getEmail()));
+    }
+
     @PostMapping("/authentication")
     public ResponseEntity<AuthenticationResponseDTO> authenticate(
             @RequestBody AuthenticationRequestDTO authenticationRequestDTO
