@@ -75,7 +75,4 @@ public class UserAuthentication implements UserDetails, Principal {
         return true;
     }
 
-    public UserAuthentication orElseThrow(Object principalNotFound) {
-        return null;
-    }
 }
