@@ -25,7 +25,8 @@ public class JwtService {
     @Value("${application.security.jwt.jwtExpiration}")
     private Long jwtExpiration;
 
-    public String generateToken(HashMap<String,Object> claims, UserDetails userDetails) {
+    public String generateToken(UserDetails userDetails) {
+        HashMap<String, Object> claims = new HashMap<>();
         return buildToken(claims,userDetails,jwtExpiration);
     }
 
