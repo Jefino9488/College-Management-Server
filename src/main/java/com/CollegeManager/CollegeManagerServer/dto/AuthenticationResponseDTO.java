@@ -13,29 +13,6 @@ import org.springframework.stereotype.Component;
 @NoArgsConstructor
 
 public class AuthenticationResponseDTO {
-
-    private Long userId;
-
-    private String firstName;
-
-    private String lastName;
-
-    private String gender;
-
-    private Integer age;
-
-    private String mobileNumber;
-
-    private String email;
-
-    private String department;
-
-    private String role;
-
-    private String jwtToken;
-
-    private Long collegeId;
-
-    private String collegeName;
-
+    private String token;
+    private UserDTO user;
 }
