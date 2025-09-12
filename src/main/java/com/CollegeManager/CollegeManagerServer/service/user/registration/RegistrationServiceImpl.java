@@ -1,5 +1,6 @@
 package com.CollegeManager.CollegeManagerServer.service.user.registration;
 
+import com.CollegeManager.CollegeManagerServer.dto.AuthenticationResponseDTO;
 import com.CollegeManager.CollegeManagerServer.dto.RegistrationRequestDTO;
 import com.CollegeManager.CollegeManagerServer.dto.ResponseDTO;
 import com.CollegeManager.CollegeManagerServer.emailsender.EmailService;
@@ -26,6 +27,7 @@ public class RegistrationServiceImpl implements RegistrationService{
     private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
     private final CollegeRepository collegeRepository;
+    private final JwtService jwtService;
 
     @Override
     public ResponseDTO registrationEmailValidation(String email) throws MessagingException {
@@ -55,43 +57,68 @@ public class RegistrationServiceImpl implements RegistrationService{
                 .build();
     }
 
-    @Override
-    public ResponseDTO userRegistration(RegistrationRequestDTO registrationRequestDTO) throws MessagingException {
-        ResponseDTO presentResponse = verifyActivationCode(registrationRequestDTO);
+    @Transactional
+    public AuthenticationResponseDTO userRegistration(RegistrationRequestDTO registrationRequestDTO) throws MessagingException {
+        ResponseDTO verificationResponse = verifyActivationCode(registrationRequestDTO);
 
-        if (presentResponse.isStatus()) {
-            UserAccount userData = UserAccount.builder()
-                    .firstName(registrationRequestDTO.getFirstName())
-                    .lastName(registrationRequestDTO.getLastName())
-                    .gender(registrationRequestDTO.getGender())
-                    .mobileNumber(registrationRequestDTO.getMobileNumber())
-                    .build();
+        if (!verificationResponse.isStatus()) {
+            throw new RuntimeException(verificationResponse.getMessage());
+        }
 
-            // Associate college
+        RoleEnum role = RoleEnum.valueOf(registrationRequestDTO.getRole().toUpperCase());
+
+        UserAccount userData = UserAccount.builder()
+                .firstName(registrationRequestDTO.getFirstName())
+                .lastName(registrationRequestDTO.getLastName())
+                .gender(registrationRequestDTO.getGender())
+                .mobileNumber(registrationRequestDTO.getMobileNumber())
+                .role(role)
+                .build();
+
+        if (role == RoleEnum.PRINCIPAL) {
+            userData.setCollege(null);
+            userData.setDepartment(null);
+        } else {
+            if (registrationRequestDTO.getCollegeId() == null) {
+                throw new IllegalArgumentException("College ID is required for this role.");
+            }
             College college = collegeRepository.findById(registrationRequestDTO.getCollegeId())
                     .orElseThrow(() -> new IllegalArgumentException("Invalid college ID"));
             userData.setCollege(college);
 
-            // Department validation
-            if (!registrationRequestDTO.getRole().equalsIgnoreCase("PRINCIPAL")) {
-                Department department = departmentRepository.findByCode(registrationRequestDTO.getDepartment())
-                        .orElseThrow(() -> new IllegalArgumentException("Invalid department code"));
-                userData.setDepartment(department);
+            if (registrationRequestDTO.getDepartment() == null || registrationRequestDTO.getDepartment().isEmpty()) {
+                throw new IllegalArgumentException("Department code is required for this role.");
             }
-
-            userAccountRepository.save(userData);
-
-            RoleEnum responseRoleEnum = RoleEnum.valueOf(registrationRequestDTO.getRole());
-            UserAuthentication userAuthentication = UserAuthentication.builder()
-                    .userId(userData.getId())
-                    .email(registrationRequestDTO.getEmail())
-                    .password(passwordEncoder.encode(registrationRequestDTO.getPassword()))
-                    .role(responseRoleEnum)
-                    .build();
-            userAuthenticationRepository.save(userAuthentication);
+            Department department = departmentRepository.findByCodeAndCollege(registrationRequestDTO.getDepartment(), college)
+                    .orElseThrow(() -> new IllegalArgumentException("Invalid department code '" + registrationRequestDTO.getDepartment() + "' for the selected college."));
+            userData.setDepartment(department);
         }
 
-        return presentResponse;
+        userAccountRepository.save(userData);
+
+        UserAuthentication userAuthentication = UserAuthentication.builder()
+                .userId(userData.getId())
+                .email(registrationRequestDTO.getEmail())
+                .password(passwordEncoder.encode(registrationRequestDTO.getPassword()))
+                .role(role)
+                .build();
+        userAuthenticationRepository.save(userAuthentication);
+
+        String jwtToken = jwtService.generateToken(userAuthentication);
+
+        UserDTO userDto = UserDTO.builder()
+                .id(userData.getId())
+                .name(userData.getFirstName() + " " + userData.getLastName())
+                .email(userAuthentication.getEmail())
+                .role(userAuthentication.getRole().name().toLowerCase())
+                .collegeId(userData.getCollege() != null ? userData.getCollege().getId() : null)
+                .departmentId(userData.getDepartment() != null ? userData.getDepartment().getId() : null)
+                .build();
+
+        return AuthenticationResponseDTO.builder()
+                .token(jwtToken)
+                .user(userDto)
+                .build();
     }
 
     private ResponseDTO verifyActivationCode(RegistrationRequestDTO registrationRequestDTO) throws MessagingException {

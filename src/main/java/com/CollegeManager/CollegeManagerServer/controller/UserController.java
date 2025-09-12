@@ -29,7 +29,7 @@ public class UserController {
     }
 
     @PostMapping("/registration/verify")
-    public ResponseEntity<ResponseDTO> verifyActivationCode(
+    public ResponseEntity<AuthenticationResponseDTO> verifyActivationCode(
             @RequestBody RegistrationRequestDTO registrationRequestDTO
     ) throws MessagingException {
         return ResponseEntity.ok(registrationService.userRegistration(registrationRequestDTO));
