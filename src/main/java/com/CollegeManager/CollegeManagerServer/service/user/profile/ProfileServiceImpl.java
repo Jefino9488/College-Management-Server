@@ -1,9 +1,6 @@
 package com.CollegeManager.CollegeManagerServer.service.user.profile;
 
-import com.CollegeManager.CollegeManagerServer.dto.PrincipalProfileUpdateDTO;
-import com.CollegeManager.CollegeManagerServer.dto.ResponseDTO;
-import com.CollegeManager.CollegeManagerServer.dto.StudentProfileUpdateDTO;
-import com.CollegeManager.CollegeManagerServer.dto.TeacherProfileUpdateDTO;
+import com.CollegeManager.CollegeManagerServer.dto.*;
 import com.CollegeManager.CollegeManagerServer.entity.Department;
 import com.CollegeManager.CollegeManagerServer.entity.RoleEnum;
 import com.CollegeManager.CollegeManagerServer.entity.UserAccount;
@@ -24,6 +21,22 @@ public class ProfileServiceImpl implements ProfileService {
     private final UserAccountRepository userAccountRepository;
     private final UserAuthenticationRepository userAuthenticationRepository;
     private final DepartmentRepository departmentRepository;
+
+    @Override
+    public UserProfileStatusDTO getProfileStatus(String email) {
+        UserAuthentication userAuth = userAuthenticationRepository.findByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with email: " + email));
+
+        UserAccount userAccount = userAccountRepository.findById(userAuth.getUserId())
+                .orElseThrow(() -> new EntityNotFoundException("User account not found for user ID: " + userAuth.getUserId()));
+
+        return UserProfileStatusDTO.builder()
+                .id(userAccount.getId())
+                .email(userAuth.getEmail())
+                .role(userAuth.getRole().name())
+                .collegeId(userAccount.getCollege() != null ? userAccount.getCollege().getId() : null)
+                .build();
+    }
 
     @Override
     public ResponseDTO updateStudentProfile(String userEmail, StudentProfileUpdateDTO dto) {
