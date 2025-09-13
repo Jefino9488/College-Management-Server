@@ -10,7 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/fees")
+@RequestMapping("/college-manager/fees")
 @RequiredArgsConstructor
 public class FeeController {
     private final FeeRepository feeRepository;
