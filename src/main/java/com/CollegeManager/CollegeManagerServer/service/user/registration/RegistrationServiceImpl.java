@@ -78,6 +78,8 @@ public class RegistrationServiceImpl implements RegistrationService{
                 .role(role)
                 .build();
 
+        Department department = null;
+
         if (role == RoleEnum.PRINCIPAL) {
             userData.setCollege(null);
             userData.setDepartment(null);
@@ -92,12 +94,20 @@ public class RegistrationServiceImpl implements RegistrationService{
             if (registrationRequestDTO.getDepartment() == null || registrationRequestDTO.getDepartment().isEmpty()) {
                 throw new IllegalArgumentException("Department code is required for this role.");
             }
-            Department department = departmentRepository.findByCodeAndCollege(registrationRequestDTO.getDepartment(), college)
+            department = departmentRepository.findByCodeAndCollege(registrationRequestDTO.getDepartment(), college)
                     .orElseThrow(() -> new IllegalArgumentException("Invalid department code '" + registrationRequestDTO.getDepartment() + "' for the selected college."));
             userData.setDepartment(department);
         }
 
         userAccountRepository.save(userData);
+
+        if (role == RoleEnum.HOD && department != null) {
+            if (department.getHod() != null) {
+                throw new IllegalStateException("This department already has an HOD assigned.");
+            }
+            department.setHod(userData);
+            departmentRepository.save(department);
+        }
 
         UserAuthentication userAuthentication = UserAuthentication.builder()
                 .userId(userData.getId())

@@ -1,5 +1,6 @@
 package com.CollegeManager.CollegeManagerServer.service.grade;
 
+import com.CollegeManager.CollegeManagerServer.dto.GradeDetailsDTO;
 import com.CollegeManager.CollegeManagerServer.entity.Grade;
 import com.CollegeManager.CollegeManagerServer.entity.Subject;
 import com.CollegeManager.CollegeManagerServer.entity.UserAccount;
@@ -10,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -20,15 +22,29 @@ public class GradeService {
 
     public double calculateCGPA(Long studentId) {
         List<Grade> grades = gradeRepository.findByStudentId(studentId);
-        return grades.stream()
+        return calculateCGPAForGrades(grades); // Delegate to the new method
+    }
+
+    // NEW: Overloaded method to calculate CGPA from a pre-fetched list of grades
+    public double calculateCGPAForGrades(List<Grade> grades) {
+        if (grades.isEmpty()) {
+            return 0.0;
+        }
+        double totalPoints = grades.stream()
                 .mapToDouble(g -> convertGradeToPoints(g.getGrade()) * g.getSubject().getCredits())
-                .sum() / grades.stream().mapToInt(g -> g.getSubject().getCredits()).sum();
+                .sum();
+        int totalCredits = grades.stream().mapToInt(g -> g.getSubject().getCredits()).sum();
+        return totalCredits == 0 ? 0.0 : totalPoints / totalCredits;
     }
 
     private double convertGradeToPoints(String grade) {
         return switch (grade) {
-            case "A" -> 4.0;
+            case "A", "A+" -> 4.0;
+            case "A-" -> 3.7;
+            case "B+" -> 3.3;
             case "B" -> 3.0;
+            case "B-" -> 2.7;
+            case "C+" -> 2.3;
             case "C" -> 2.0;
             case "D" -> 1.0;
             default -> 0.0;
@@ -40,18 +56,27 @@ public class GradeService {
                 .orElseThrow(() -> new IllegalArgumentException("Student not found"));
         Subject subject = subjectRepository.findByCode(subjectCode)
                 .orElseThrow(() -> new IllegalArgumentException("Subject not found"));
-
         if (gradeRepository.existsByStudentIdAndSubjectId(student.getId(), subject.getId())) {
             throw new IllegalArgumentException("Grade already exists for this student and subject");
         }
-
         Grade gradeEntity = Grade.builder()
                 .student(student)
                 .subject(subject)
                 .semester(semester)
                 .grade(grade)
                 .build();
-
         gradeRepository.save(gradeEntity);
+    }
+
+    public List<GradeDetailsDTO> getGradesForStudent(Long studentId) {
+        return gradeRepository.findByStudentId(studentId).stream()
+                .map(grade -> GradeDetailsDTO.builder()
+                        .subjectName(grade.getSubject().getName())
+                        .subjectCode(grade.getSubject().getCode())
+                        .credits(grade.getSubject().getCredits())
+                        .grade(grade.getGrade())
+                        .semester(grade.getSemester())
+                        .build())
+                .collect(Collectors.toList());
     }
 }

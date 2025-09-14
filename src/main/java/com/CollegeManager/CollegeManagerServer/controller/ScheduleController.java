@@ -1,14 +1,11 @@
 package com.CollegeManager.CollegeManagerServer.controller;
 
 import com.CollegeManager.CollegeManagerServer.entity.Exam;
-import com.CollegeManager.CollegeManagerServer.entity.RoleEnum;
-import com.CollegeManager.CollegeManagerServer.entity.UserAuthentication;
 import com.CollegeManager.CollegeManagerServer.service.exam.ExamService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.access.prepost.PreAuthorize; // ADDED
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController
@@ -28,25 +25,25 @@ public class ScheduleController {
 
     // Add exam (STAFF/HOD only)
     @PostMapping
-    public ResponseEntity<Exam> addExam(
-            @RequestBody Exam exam,
-            @AuthenticationPrincipal UserAuthentication user
-    ) {
-        if (!user.getRole().equals(RoleEnum.STAFF) && !user.getRole().equals(RoleEnum.HOD)) {
-            return ResponseEntity.status(403).build();
-        }
+    @PreAuthorize("hasAnyRole('STAFF', 'HOD')") // ADDED
+    public ResponseEntity<Exam> addExam(@RequestBody Exam exam) { // MODIFIED
         return ResponseEntity.ok(examService.addExam(exam));
+    }
+
+    // Update exam (STAFF/HOD only)
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('STAFF', 'HOD')") // ADDED
+    public ResponseEntity<Exam> updateExam(
+            @PathVariable Long id,
+            @RequestBody Exam exam
+    ) { // MODIFIED
+        return ResponseEntity.ok(examService.updateExam(id, exam));
     }
 
     // Delete exam (STAFF/HOD only)
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteExam(
-            @PathVariable Long id,
-            @AuthenticationPrincipal UserAuthentication user
-    ) {
-        if (!user.getRole().equals(RoleEnum.STAFF) && !user.getRole().equals(RoleEnum.HOD)) {
-            return ResponseEntity.status(403).build();
-        }
+    @PreAuthorize("hasAnyRole('STAFF', 'HOD')") // ADDED
+    public ResponseEntity<Void> deleteExam(@PathVariable Long id) { // MODIFIED
         examService.deleteExam(id);
         return ResponseEntity.noContent().build();
     }

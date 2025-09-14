@@ -1,4 +1,3 @@
-
 package com.CollegeManager.CollegeManagerServer.controller;
 
 import com.CollegeManager.CollegeManagerServer.dto.AttendanceRequestDTO;
@@ -7,6 +6,7 @@ import com.CollegeManager.CollegeManagerServer.entity.Attendance;
 import com.CollegeManager.CollegeManagerServer.service.attendance.AttendanceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize; // ADDED
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,6 +18,7 @@ public class AttendanceController {
     private final AttendanceService attendanceService;
 
     @PostMapping("/submit")
+    @PreAuthorize("hasAnyRole('STAFF', 'HOD')") // ADDED
     public ResponseEntity<ResponseDTO> submitAttendance(@RequestBody AttendanceRequestDTO request) {
         attendanceService.submitAttendance(request);
         return ResponseEntity.ok(ResponseDTO.builder()
@@ -27,6 +28,7 @@ public class AttendanceController {
     }
 
     @GetMapping("/history")
+    @PreAuthorize("hasAnyRole('STAFF', 'HOD')") // ADDED
     public ResponseEntity<List<Attendance>> getAttendanceHistory(
             @RequestParam String department,
             @RequestParam Integer academicYear,

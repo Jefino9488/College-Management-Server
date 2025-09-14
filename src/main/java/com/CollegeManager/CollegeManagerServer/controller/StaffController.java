@@ -9,7 +9,6 @@ import com.CollegeManager.CollegeManagerServer.repository.UserAccountRepository;
 import com.CollegeManager.CollegeManagerServer.repository.UserAuthenticationRepository;
 import com.CollegeManager.CollegeManagerServer.service.staff.StaffService;
 import lombok.RequiredArgsConstructor;
-import org.antlr.v4.runtime.tree.pattern.ParseTreePattern;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -20,11 +19,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @RestController
-@RequestMapping("/college-manager")
+@RequestMapping("/college-manager/staff") // Consolidated mapping
 @RequiredArgsConstructor
-
 public class StaffController {
 
     private final StaffService staffService;
@@ -33,7 +32,8 @@ public class StaffController {
     private final UserAuthenticationRepository authRepository;
     private final UserAccountRepository userAccountRepository;
 
-    @PostMapping("/staff/add-students")
+    @PostMapping("/add-students")
+    @PreAuthorize("hasAnyRole('STAFF', 'HOD')")
     public ResponseEntity<ResponseDTO> readOperationExcel(
             @RequestParam("students_data") MultipartFile students_data,
             @RequestParam("department") String department,
@@ -41,7 +41,8 @@ public class StaffController {
         return ResponseEntity.ok(staffService.addStudents(students_data, department, academicYear));
     }
 
-    @GetMapping("/staff/students")
+    @GetMapping("/students")
+    @PreAuthorize("hasAnyRole('STAFF', 'HOD')")
     public ResponseEntity<List<StudentDTO>> getStudentsByDepartmentAndYear(
             @RequestParam String department,
             @RequestParam Integer academicYear) {
@@ -49,7 +50,8 @@ public class StaffController {
         return ResponseEntity.ok(students != null ? students : Collections.emptyList());
     }
 
-    @PostMapping("/staff/add-grades")
+    @PostMapping("/add-grades")
+    @PreAuthorize("hasAnyRole('STAFF', 'HOD')")
     public ResponseEntity<?> addGrades(
             @RequestParam("grades_data") MultipartFile grades_data,
             @RequestParam("semester") int semester,
@@ -57,42 +59,41 @@ public class StaffController {
             @RequestParam("academicYear") int academicYear) {
         return ResponseEntity.ok(staffService.addGrades(grades_data, semester, department, academicYear));
     }
-    @GetMapping("/staff/all")
+
+    @GetMapping("/college/{collegeId}")
     @PreAuthorize("hasRole('PRINCIPAL')")
-    public ResponseEntity<List<UserAccount>> getAllStaff(
-            @RequestParam Long collegeId,
+    public ResponseEntity<List<UserAccount>> getStaffByCollege(
+            @PathVariable Long collegeId,
             @AuthenticationPrincipal UserAuthentication principal) {
-        // Validate principal owns collegeId
-        College college = collegeRepository.findById(collegeId).orElseThrow();
+
+        College college = collegeRepository.findById(collegeId)
+                .orElseThrow(() -> new IllegalArgumentException("College not found"));
+
         if (!college.getPrincipal().getId().equals(principal.getUserId())) {
             return ResponseEntity.status(403).build();
         }
 
-        List<UserAuthentication> staffAuths = authRepository.findAll().stream()
-                .filter(auth -> auth.getRole().equals(RoleEnum.STAFF))
-                .toList();
-        return ResponseEntity.ok(staffAuths.stream()
-                .map(auth -> userAccountRepository.findById(auth.getUserId()).orElse(null))
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList()));
-    }
-    @GetMapping("/staff/department")
-    @PreAuthorize("hasRole('HOD')")
-    public ResponseEntity<List<UserAccount>> getStaffByDepartment(
-            @RequestParam String department,
-            @AuthenticationPrincipal UserAuthentication principal) {
-        Department dept = departmentRepository.findByHodId(principal.getUserId()).orElseThrow();
-        if (!dept.getName().equals(department)) {
-            return ResponseEntity.status(403).build();
-        }
-        List<UserAuthentication> staffAuths = authRepository.findAll().stream()
-                .filter(auth -> auth.getRole().equals(RoleEnum.STAFF))
-                .toList();
-        return ResponseEntity.ok(staffAuths.stream()
-                .map(auth -> userAccountRepository.findById(auth.getUserId()).orElse(null))
-                .filter(Objects::nonNull)
-                .filter(staff -> staff.getDepartment().equals(department))
-                .collect(Collectors.toList()));
+        List<UserAccount> staff = staffService.getStaffByCollege(collegeId);
+        return ResponseEntity.ok(staff);
     }
 
+    @GetMapping("/by-department/{departmentId}")
+    @PreAuthorize("hasRole('HOD')")
+    public ResponseEntity<List<UserAccount>> getStaffByDepartment(
+            @PathVariable Long departmentId,
+            @AuthenticationPrincipal UserAuthentication principal) {
+
+        // Security check: ensure the HOD requesting is the HOD of this department
+        Department department = departmentRepository.findById(departmentId)
+                .orElseThrow(() -> new IllegalArgumentException("Department not found"));
+
+        UserAccount hod = userAccountRepository.findById(principal.getUserId()).orElseThrow();
+
+        if (department.getHod() == null || !department.getHod().getId().equals(hod.getId())) {
+            return ResponseEntity.status(403).build(); // Forbidden
+        }
+
+        List<UserAccount> staff = staffService.getStaffByDepartment(departmentId);
+        return ResponseEntity.ok(staff);
+    }
 }

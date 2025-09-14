@@ -1,5 +1,6 @@
 package com.CollegeManager.CollegeManagerServer.repository;
 
+import com.CollegeManager.CollegeManagerServer.entity.RoleEnum;
 import com.CollegeManager.CollegeManagerServer.entity.UserAccount;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -17,4 +18,8 @@ public interface UserAccountRepository extends JpaRepository<UserAccount, Long> 
     Optional<UserAccount> findByRegistrationNumber(String registrationNumber); // New method
     @Query("SELECT ua FROM UserAccount ua WHERE EXISTS (SELECT auth FROM UserAuthentication auth WHERE auth.userId = ua.id AND auth.role = 'HOD')")
     List<UserAccount> findAllHods();
+
+    long countByDepartmentIdAndRole(Long id, RoleEnum roleEnum);
+
+    long countByRole(RoleEnum roleEnum);
 }

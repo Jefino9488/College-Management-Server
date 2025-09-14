@@ -7,5 +7,6 @@ import java.util.List;
 public interface ExamService {
     List<Exam> getExams(String department, String semester);
     Exam addExam(Exam exam);
+    Exam updateExam(Long id, Exam exam); // NEW
     void deleteExam(Long id);
 }

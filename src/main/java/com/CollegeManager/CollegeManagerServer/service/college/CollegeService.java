@@ -51,9 +51,9 @@ public class CollegeService {
                 .orElseThrow(() -> new IllegalArgumentException("Principal account not found"));
 
         college.setPrincipal(principal);
-        principal.setCollege(college); // Link back to college
+        principal.setCollege(college); // MODIFIED: Link the college back to the principal's account
         collegeRepository.save(college);
-        userAccountRepository.save(principal);
+        userAccountRepository.save(principal); // MODIFIED: Save the updated principal account
 
         principalAuth.setRole(RoleEnum.PRINCIPAL);
         authRepository.save(principalAuth);

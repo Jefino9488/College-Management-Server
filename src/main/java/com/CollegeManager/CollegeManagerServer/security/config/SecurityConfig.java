@@ -54,8 +54,11 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(req ->
                         req.requestMatchers(
-                                        "/college-manager/**",
-                                        "/api/college/register"
+                                        // MODIFIED: Specific public endpoints
+                                        "/college-manager/authentication",
+                                        "/college-manager/registration/**",
+                                        "/college-manager/college/all",
+                                        "/college-manager/department/by-college/**"
                                 )
                                 .permitAll()
                                 .anyRequest()

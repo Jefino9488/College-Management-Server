@@ -6,6 +6,7 @@ import com.CollegeManager.CollegeManagerServer.service.user.authentication.Authe
 import com.CollegeManager.CollegeManagerServer.service.user.profile.ProfileService;
 import com.CollegeManager.CollegeManagerServer.service.user.registration.RegistrationService;
 import jakarta.mail.MessagingException;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -30,7 +31,7 @@ public class UserController {
 
     @PostMapping("/registration/verify")
     public ResponseEntity<AuthenticationResponseDTO> verifyActivationCode(
-            @RequestBody RegistrationRequestDTO registrationRequestDTO
+            @Valid @RequestBody RegistrationRequestDTO registrationRequestDTO // Add @Valid annotation
     ) throws MessagingException {
         return ResponseEntity.ok(registrationService.userRegistration(registrationRequestDTO));
     }

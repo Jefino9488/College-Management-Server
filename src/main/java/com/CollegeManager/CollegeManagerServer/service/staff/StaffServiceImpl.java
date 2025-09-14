@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -208,5 +209,20 @@ public class StaffServiceImpl implements StaffService {
                     .message("Error processing Excel file")
                     .build();
         }
+    }
+    @Override
+    public List<UserAccount> getStaffByCollege(Long collegeId) {
+        return userAccountRepository.findAll().stream()
+                .filter(user -> user.getCollege() != null && user.getCollege().getId().equals(collegeId))
+                .filter(user -> user.getRole() == RoleEnum.STAFF || user.getRole() == RoleEnum.HOD)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<UserAccount> getStaffByDepartment(Long departmentId) {
+        return userAccountRepository.findAll().stream()
+                .filter(user -> user.getDepartment() != null && user.getDepartment().getId().equals(departmentId))
+                .filter(user -> user.getRole() == RoleEnum.STAFF)
+                .collect(Collectors.toList());
     }
 }
