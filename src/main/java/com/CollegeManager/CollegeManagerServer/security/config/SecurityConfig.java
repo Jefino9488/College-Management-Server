@@ -58,7 +58,10 @@ public class SecurityConfig {
                                         "/college-manager/authentication",
                                         "/college-manager/registration/**",
                                         "/college-manager/college/all",
-                                        "/college-manager/department/by-college/**"
+                                        "/college-manager/department/by-college/**",
+                                        "/v3/api-docs/**",
+                                        "/swagger-ui/**",
+                                        "/swagger-ui.html"
                                 )
                                 .permitAll()
                                 .anyRequest()
